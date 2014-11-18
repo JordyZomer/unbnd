@@ -409,7 +409,7 @@ extern int optind;
 /** getopt global, in case header files fail to declare it. */
 extern char* optarg;
 
-/** Main routine for unbound-host */
+/** Main routine for checkconf */
 int main(int argc, char* argv[])
 {
 	int c;

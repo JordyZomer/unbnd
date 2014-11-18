@@ -1,31 +1,9 @@
-17 November 2014: Wouter
-	- Fix #627: SSL_CTX_load_verify_locations return code not properly
-	  checked.
-
-14 November 2014: Wouter
-	- parser with bison 2.7
-
-13 November 2014: Wouter
-	- Patch from Stephanie Lapie that implements aaaa-filter, added
-	  to contrib/aaaa-filter-iterator.patch.
-
-12 November 2014: Wouter
-	- trunk has 1.5.1 in development.
-	- Patch from Robert Edmonds to build pyunbound python module
-	  differently.  No versioninfo, with -shared and without $(LIBS).
-	- Patch from Robert Edmonds fixes hyphens in unbound-anchor man page.
-	- Removed 'increased limit open files' log message that is written
-	  to console.  It is only written on verbosity 4 and higher.
-	  This keeps system bootup console cleaner.
-	- Patch from James Raftery, always print stats for rcodes 0..5.
-
 11 November 2014: Wouter
 	- iana portlist update.
 	- Fix bug where forward or stub addresses with same address but
 	  different port number were not tried.
 	- version number in svn trunk is 1.5.0
 	- tag 1.5.0rc1
-	- review fix from Ralph.
 
 7 November 2014: Wouter
 	- dnstap fixes by Robert Edmonds:
