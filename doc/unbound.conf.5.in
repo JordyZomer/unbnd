@@ -164,14 +164,12 @@ By default only ports above 1024 that have not been assigned by IANA are used.
 Give a port number or a range of the form "low\-high", without spaces.
 .TP
 .B outgoing\-num\-tcp: \fI<number>
-Number of outgoing TCP buffers to allocate per thread. Default is 10. If
-set to 0, or if do\-tcp is "no", no TCP queries to authoritative servers
-are done.  For larger installations increasing this value is a good idea.
+Number of outgoing TCP buffers to allocate per thread. Default is 10. If set
+to 0, or if do\-tcp is "no", no TCP queries to authoritative servers are done.
 .TP
 .B incoming\-num\-tcp: \fI<number>
-Number of incoming TCP buffers to allocate per thread. Default is
-10. If set to 0, or if do\-tcp is "no", no TCP queries from clients are
-accepted. For larger installations increasing this value is a good idea.
+Number of incoming TCP buffers to allocate per thread. Default is 10. If set
+to 0, or if do\-tcp is "no", no TCP queries from clients are accepted.
 .TP
 .B edns\-buffer\-size: \fI<number>
 Number of bytes size to advertise as the EDNS reassembly buffer size.
@@ -549,13 +547,6 @@ not RFC standard, and could lead to performance problems because of the
 extra query load that is generated.  Experimental option.
 If you enable it consider adding more numbers after the target\-fetch\-policy
 to increase the max depth that is checked to.
-.TP
-.B harden\-algo\-downgrade: \fI<yes or no>
-Harden against algorithm downgrade when multiple algorithms are
-advertised in the DS record.  If no, allows the weakest algorithm to
-validate the zone.  Default is yes.  Zone signers must produce zones
-that allow this feature to work, but sometimes they do not, and turning
-this option off avoids that validation failure.
 .TP
 .B use\-caps\-for\-id: \fI<yes or no>
 Use 0x20\-encoded random bits in the query to foil spoof attempts.

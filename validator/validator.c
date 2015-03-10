@@ -2352,7 +2352,7 @@ primeResponseToKE(struct ub_packed_rrset_key* dnskey_rrset,
 	struct key_entry_key* kkey = NULL;
 	enum sec_status sec = sec_status_unchecked;
 	char* reason = NULL;
-	int downprot = qstate->env->cfg->harden_algo_downgrade;
+	int downprot = 1;
 
 	if(!dnskey_rrset) {
 		log_nametypeclass(VERB_OPS, "failed to prime trust anchor -- "
