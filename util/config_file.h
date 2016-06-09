@@ -44,12 +44,10 @@
 struct config_stub;
 struct config_strlist;
 struct config_str2list;
-struct config_str3list;
 struct config_strbytelist;
 struct module_qstate;
 struct sock_list;
 struct ub_packed_rrset_key;
-struct regional;
 
 /**
  * The configuration options.
@@ -294,20 +292,12 @@ struct config_file {
 	struct config_strlist* local_zones_nodefault;
 	/** local data RRs configured */
 	struct config_strlist* local_data;
-	/** local zone override types per netblock */
-	struct config_str3list* local_zone_overrides;
 	/** unblock lan zones (reverse lookups for AS112 zones) */
 	int unblock_lan_zones;
 	/** insecure lan zones (don't validate AS112 zones) */
 	int insecure_lan_zones;
 	/** list of zonename, tagbitlist */
 	struct config_strbytelist* local_zone_tags;
-	/** list of aclname, tagbitlist */
-	struct config_strbytelist* acl_tags;
-	/** list of aclname, tagname, localzonetype */
-	struct config_str3list* acl_tag_actions;
-	/** list of aclname, tagname, redirectdata */
-	struct config_str3list* acl_tag_datas;
 	/** tag list, array with tagname[i] is malloced string */
 	char** tagname;
 	/** number of items in the taglist */
@@ -442,21 +432,6 @@ struct config_str2list {
 	/** second string */
 	char* str2;
 };
-
-/**
- * List of three strings for config options
- */
-struct config_str3list {
-	/** next item in list */
-	struct config_str3list* next;
-	/** first string */
-	char* str;
-	/** second string */
-	char* str2;
-	/** third string */
-	char* str3;
-};
-
 
 /**
  * List of string, bytestring for config options
@@ -600,10 +575,6 @@ int cfg_strlist_append(struct config_strlist_head* list, char* item);
  */
 int cfg_strlist_insert(struct config_strlist** head, char* item);
 
-/** insert with region for allocation. */
-int cfg_region_strlist_insert(struct regional* region,
-	struct config_strlist** head, char* item);
-
 /**
  * Insert string into str2list.
  * @param head: pointer to str2list head variable.
@@ -614,19 +585,8 @@ int cfg_region_strlist_insert(struct regional* region,
 int cfg_str2list_insert(struct config_str2list** head, char* item, char* i2);
 
 /**
- * Insert string into str3list.
- * @param head: pointer to str3list head variable.
- * @param item: new item. malloced by caller. If NULL the insertion fails.
- * @param i2: 2nd string, malloced by caller. If NULL the insertion fails.
- * @param i3: 3rd string, malloced by caller. If NULL the insertion fails.
- * @return: true on success.
- */
-int cfg_str3list_insert(struct config_str3list** head, char* item, char* i2,
-	char* i3);
-
-/**
  * Insert string into strbytelist.
- * @param head: pointer to strbytelist head variable.
+ * @param head: pointer to str2list head variable.
  * @param item: new item. malloced by caller. If NULL the insertion fails.
  * @param i2: 2nd string, malloced by caller. If NULL the insertion fails.
  * @param i2len: length of the i2 bytestring.
@@ -657,15 +617,6 @@ void config_delstrlist(struct config_strlist* list);
  * @param list: list.
  */
 void config_deldblstrlist(struct config_str2list* list);
-
-/**
- * Delete items in config triple string list.
- * @param list: list.
- */
-void config_deltrplstrlist(struct config_str3list* list);
-
-/** delete stringbytelist */
-void config_del_strbytelist(struct config_strbytelist* list);
 
 /**
  * Delete a stub item

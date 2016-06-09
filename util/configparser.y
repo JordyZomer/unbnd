@@ -126,8 +126,6 @@ extern struct config_parser_state* cfg_parser;
 %token VAR_RATELIMIT_FOR_DOMAIN VAR_RATELIMIT_BELOW_DOMAIN VAR_RATELIMIT_FACTOR
 %token VAR_CAPS_WHITELIST VAR_CACHE_MAX_NEGATIVE_TTL VAR_PERMIT_SMALL_HOLDDOWN
 %token VAR_QNAME_MINIMISATION VAR_IP_FREEBIND VAR_DEFINE_TAG VAR_LOCAL_ZONE_TAG
-%token VAR_ACCESS_CONTROL_TAG VAR_LOCAL_ZONE_OVERRIDE
-%token VAR_ACCESS_CONTROL_TAG_ACTION VAR_ACCESS_CONTROL_TAG_DATA
 
 %%
 toplevelvars: /* empty */ | toplevelvars toplevelvar ;
@@ -196,9 +194,7 @@ content_server: server_num_threads | server_verbosity | server_port |
 	server_caps_whitelist | server_cache_max_negative_ttl |
 	server_permit_small_holddown | server_qname_minimisation |
 	server_ip_freebind | server_define_tag | server_local_zone_tag |
-	server_disable_dnssec_lame_check | server_access_control_tag |
-	server_local_zone_override | server_access_control_tag_action |
-	server_access_control_tag_data
+	server_disable_dnssec_lame_check
 	;
 stubstart: VAR_STUB_ZONE
 	{
@@ -1333,61 +1329,6 @@ server_local_zone_tag: VAR_LOCAL_ZONE_TAG STRING_ARG STRING_ARG
 				yyerror("out of memory");
 				free($2);
 			}
-		}
-	}
-	;
-server_access_control_tag: VAR_ACCESS_CONTROL_TAG STRING_ARG STRING_ARG
-	{
-		size_t len = 0;
-		uint8_t* bitlist = config_parse_taglist(cfg_parser->cfg, $3,
-			&len);
-		free($3);
-		OUTYY(("P(server_access_control_tag:%s)\n", $2));
-		if(!bitlist)
-			yyerror("could not parse tags, (define-tag them first)");
-		if(bitlist) {
-			if(!cfg_strbytelist_insert(
-				&cfg_parser->cfg->acl_tags,
-				$2, bitlist, len)) {
-				yyerror("out of memory");
-				free($2);
-			}
-		}
-	}
-	;
-server_access_control_tag_action: VAR_ACCESS_CONTROL_TAG_ACTION STRING_ARG STRING_ARG STRING_ARG
-	{
-		OUTYY(("P(server_access_control_tag_action:%s %s %s)\n", $2, $3, $4));
-		if(!cfg_str3list_insert(&cfg_parser->cfg->acl_tag_actions,
-			$2, $3, $4)) {
-			yyerror("out of memory");
-			free($2);
-			free($3);
-			free($4);
-		}
-	}
-	;
-server_access_control_tag_data: VAR_ACCESS_CONTROL_TAG_DATA STRING_ARG STRING_ARG STRING_ARG
-	{
-		OUTYY(("P(server_access_control_tag_data:%s %s %s)\n", $2, $3, $4));
-		if(!cfg_str3list_insert(&cfg_parser->cfg->acl_tag_datas,
-			$2, $3, $4)) {
-			yyerror("out of memory");
-			free($2);
-			free($3);
-			free($4);
-		}
-	}
-	;
-server_local_zone_override: VAR_LOCAL_ZONE_OVERRIDE STRING_ARG STRING_ARG STRING_ARG
-	{
-		OUTYY(("P(server_local_zone_override:%s %s %s)\n", $2, $3, $4));
-		if(!cfg_str3list_insert(&cfg_parser->cfg->local_zone_overrides,
-			$2, $3, $4)) {
-			yyerror("out of memory");
-			free($2);
-			free($3);
-			free($4);
 		}
 	}
 	;

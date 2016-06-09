@@ -1,33 +1,8 @@
-7 June 2016: Ralph
-	- Lookup localzones by taglist from acl.
-	- Possibility to lookup local_zone, regardless the taglist.
-	- Added local_zone/taglist/acl unit test.
-
-7 June 2016: Wouter
-	- Fix #773: Non-standard Python location build failure with pyunbound.
-	- Improve threadsafety for openssl 0.9.8 ecdsa dnssec signatures.
-
-6 June 2016: Wouter
-	- Better help text from -h (from Ray Griffith).
-	- access-control-tag config directive.
-	- local-zone-override config directive.
-	- access-control-tag-action and access-control-tag-data config
-	  directives.
-	- free acl-tags, acltag-action and acltag-data config lists during
-	  initialisation to free up memory for more entries.
-
-3 June 2016: Wouter
-	- Fix to not ignore return value of chown() in daemon startup.
-
 2 June 2016: Wouter
 	- Fix libubound for edns optlist feature.
 	- Fix distinction between free and CRYPTO_free in dsa and ecdsa alloc.
 	- Fix #752: retry resource temporarily unavailable on control pipe.
 	- un-document localzone tags.
-	- tag for release 1.5.9rc1.
-	- Fix (for 1.5.10): Fix unbound-anchor.exe file location defaults to
-	  Program Files with (x86) appended.
-	- re-documented localzone tags in example.conf.
 
 31 May 2016: Wouter
 	- Fix windows service to be created run with limited rights, as a

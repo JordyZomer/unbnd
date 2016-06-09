@@ -211,11 +211,7 @@ extern int yydebug;
     VAR_QNAME_MINIMISATION = 421,
     VAR_IP_FREEBIND = 422,
     VAR_DEFINE_TAG = 423,
-    VAR_LOCAL_ZONE_TAG = 424,
-    VAR_ACCESS_CONTROL_TAG = 425,
-    VAR_LOCAL_ZONE_OVERRIDE = 426,
-    VAR_ACCESS_CONTROL_TAG_ACTION = 427,
-    VAR_ACCESS_CONTROL_TAG_DATA = 428
+    VAR_LOCAL_ZONE_TAG = 424
   };
 #endif
 /* Tokens.  */
@@ -386,10 +382,6 @@ extern int yydebug;
 #define VAR_IP_FREEBIND 422
 #define VAR_DEFINE_TAG 423
 #define VAR_LOCAL_ZONE_TAG 424
-#define VAR_ACCESS_CONTROL_TAG 425
-#define VAR_LOCAL_ZONE_OVERRIDE 426
-#define VAR_ACCESS_CONTROL_TAG_ACTION 427
-#define VAR_ACCESS_CONTROL_TAG_DATA 428
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -400,7 +392,7 @@ union YYSTYPE
 
 	char*	str;
 
-#line 404 "util/configparser.h" /* yacc.c:1909  */
+#line 396 "util/configparser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;
