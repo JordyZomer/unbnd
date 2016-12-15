@@ -1,17 +1,5 @@
-14 December 2016: Wouter
-	- Fix #1178: attempt to fix setup error at end, pop result values
-	  at end of install.
-
-13 December 2016: Wouter
-	- Fix #1182: Fix Resource leak (socket), at startup.
-	- Fix unbound-control and ipv6 only.
-
-9 December 2016: Wouter
-	- Fix #1176: stack size too small for Alpine Linux.
-
 8 December 2016: Wouter
 	- Fix downcast warnings from visual studio in sldns code.
-	- tag 1.6.0rc1
 
 7 December 2016: Ralph
 	- Add DSA support for OpenSSL 1.1.0
