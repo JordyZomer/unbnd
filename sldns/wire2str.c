@@ -47,8 +47,6 @@ static sldns_lookup_table sldns_algorithms_data[] = {
 	{ LDNS_ECC_GOST, "ECC-GOST"},
 	{ LDNS_ECDSAP256SHA256, "ECDSAP256SHA256"},
 	{ LDNS_ECDSAP384SHA384, "ECDSAP384SHA384"},
-	{ LDNS_ED25519, "ED25519"},
-	{ LDNS_ED448, "ED448"},
 	{ LDNS_INDIRECT, "INDIRECT" },
 	{ LDNS_PRIVATEDNS, "PRIVATEDNS" },
 	{ LDNS_PRIVATEOID, "PRIVATEOID" },
@@ -167,7 +165,6 @@ static sldns_lookup_table sldns_edns_options_data[] = {
 	{ 6, "DHU" },
 	{ 7, "N3U" },
 	{ 8, "edns-client-subnet" },
-	{ 11, "edns-tcp-keepalive"},
 	{ 12, "Padding" },
 	{ 0, NULL}
 };
@@ -1841,25 +1838,6 @@ int sldns_wire2str_edns_subnet_print(char** s, size_t* sl, uint8_t* data,
 	return w;
 }
 
-int sldns_wire2str_edns_keepalive_print(char** s, size_t* sl, uint8_t* data,
-	size_t len)
-{
-	int w = 0;
-	uint16_t timeout;
-	if(!(len == 0 || len == 2)) {
-		w += sldns_str_print(s, sl, "malformed keepalive ");
-		w += print_hex_buf(s, sl, data, len);
-		return w;
-	}
-	if(len == 0 ) {
-		w += sldns_str_print(s, sl, "no timeout value (only valid for client option) ");
-	} else {
-		timeout = sldns_read_uint16(data);
-		w += sldns_str_print(s, sl, "timeout value in units of 100ms %u", (int)timeout);
-	}
-	return w;
-}
-
 int sldns_wire2str_edns_option_print(char** s, size_t* sl,
 	uint16_t option_code, uint8_t* optdata, size_t optlen)
 {
@@ -1887,9 +1865,6 @@ int sldns_wire2str_edns_option_print(char** s, size_t* sl,
 		break;
 	case LDNS_EDNS_CLIENT_SUBNET:
 		w += sldns_wire2str_edns_subnet_print(s, sl, optdata, optlen);
-		break;
-	 case LDNS_EDNS_KEEPALIVE:
-		w += sldns_wire2str_edns_keepalive_print(s, sl, optdata, optlen);
 		break;
 	case LDNS_EDNS_PADDING:
 		w += print_hex_buf(s, sl, optdata, optlen);
