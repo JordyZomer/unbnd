@@ -1,24 +1,6 @@
-24 April 2017: Wouter
-	- unbound-checkconf -o allows query of dnstap config variables.
-	  Also unbound-control get_option.  Also for dnscrypt.
-
-21 April 2017: Ralph
-	- Fix #1254: clarify ratelimit-{for,below}-domain (from Manu Bretelle).
-	- iana portlist update
-	
-18 April 2017: Ralph
-	- Fix #1252: more indentation inconsistencies.
-	- Fix #1253: unused variable in edns-subnet/addrtree.c:getbit().
-
-13 April 2017: Ralph
-	- Added ECS unit test (from Manu Bretelle).
-	- ECS documentation fix (from Manu Bretelle).
-
 13 April 2017: Wouter
 	- Fix #1250: inconsistent indentation in services/listen_dnsport.c.
 	- tag for 1.6.2rc1
-	- (for 1.6.3:) unbound.h exports the shm stats structures.  They use
-	  type long long and no ifdefs, and ub_ before the typenames.
 
 12 April 2017: Wouter
 	- subnet mem value is available in shm, also when not enabled,
@@ -255,7 +237,7 @@
 	- Fix #1184: Log DNS replies. This includes the same logging
 	  information that DNS queries and response code and response size,
 	  patch from Larissa Feng.
-	- Fix #1187: Source IP rate limiting, patch from Larissa Feng.
+	- Fix #1185: Source IP rate limiting, patch from Larissa Feng.
 
 3 January 2017: Wouter
 	- configure --enable-systemd and lets unbound use systemd sockets if

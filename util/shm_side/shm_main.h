@@ -44,8 +44,26 @@
 struct daemon;
 struct worker;
 
-/* get struct ub_shm_stat_info */
-#include "libunbound/unbound.h"
+/** Some global statistics that are not in struct stats_info,
+ * this struct is shared on a shm segment */
+struct shm_stat_info {
+
+	int num_threads;
+
+	struct {
+		struct timeval now;
+		struct timeval up;
+		struct timeval elapsed;
+	} time;
+
+	struct {
+		size_t msg;
+		size_t rrset;
+		size_t val;
+		size_t iter;
+		size_t subnet;
+	} mem;
+};
 
 /**
  * The SHM info.
@@ -53,9 +71,9 @@ struct worker;
 struct shm_main_info {
 	/** stats_info array, shared memory segment.
 	 * [0] is totals, [1..thread_num] are per-thread stats */
-	struct ub_stats_info* ptr_arr;
+	struct stats_info* ptr_arr;
 	/** the global stats block, shared memory segment */
-	struct ub_shm_stat_info* ptr_ctl;
+	struct shm_stat_info* ptr_ctl;
 	int key;
 	int id_ctl;
 	int id_arr;
