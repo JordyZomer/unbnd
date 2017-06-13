@@ -50,44 +50,42 @@
 #include "util/config_file.h"
 #include "util/net_help.h"
 #include "util/storage/dnstree.h"
-#include "sldns/str2wire.h"
-#include "util/data/dname.h"
 
-struct ecs_whitelist* 
-ecs_whitelist_create(void)
+struct ednssubnet_upstream* 
+upstream_create(void)
 {
-	struct ecs_whitelist* whitelist = 
-		(struct ecs_whitelist*)calloc(1,
-		sizeof(struct ecs_whitelist));
-	if(!whitelist)
+	struct ednssubnet_upstream* upstream = 
+		(struct ednssubnet_upstream*)calloc(1,
+		sizeof(struct ednssubnet_upstream));
+	if(!upstream)
 		return NULL;
-	whitelist->region = regional_create();
-	if(!whitelist->region) {
-		ecs_whitelist_delete(whitelist);
+	upstream->region = regional_create();
+	if(!upstream->region) {
+		upstream_delete(upstream);
 		return NULL;
 	}
-	return whitelist;
+	return upstream;
 }
 
 void 
-ecs_whitelist_delete(struct ecs_whitelist* whitelist)
+upstream_delete(struct ednssubnet_upstream* upstream)
 {
-	if(!whitelist) 
+	if(!upstream) 
 		return;
-	regional_destroy(whitelist->region);
-	free(whitelist);
+	regional_destroy(upstream->region);
+	free(upstream);
 }
 
-/** insert new address into whitelist structure */
+/** insert new address into upstream structure */
 static int
-upstream_insert(struct ecs_whitelist* whitelist, 
+upstream_insert(struct ednssubnet_upstream* upstream, 
 	struct sockaddr_storage* addr, socklen_t addrlen, int net)
 {
 	struct addr_tree_node* node = (struct addr_tree_node*)regional_alloc(
-		whitelist->region, sizeof(*node));
+		upstream->region, sizeof(*node));
 	if(!node)
 		return 0;
-	if(!addr_tree_insert(&whitelist->upstream, node, addr, addrlen, net)) {
+	if(!addr_tree_insert(&upstream->tree, node, addr, addrlen, net)) {
 		verbose(VERB_QUERY,
 			"duplicate send-client-subnet address ignored.");
 	}
@@ -96,7 +94,7 @@ upstream_insert(struct ecs_whitelist* whitelist,
 
 /** apply edns-subnet string */
 static int
-upstream_str_cfg(struct ecs_whitelist* whitelist, const char* str)
+upstream_str_cfg(struct ednssubnet_upstream* upstream, const char* str)
 {
 	struct sockaddr_storage addr;
 	int net;
@@ -106,7 +104,7 @@ upstream_str_cfg(struct ecs_whitelist* whitelist, const char* str)
 		log_err("cannot parse send-client-subnet netblock: %s", str);
 		return 0;
 	}
-	if(!upstream_insert(whitelist, &addr, addrlen, net)) {
+	if(!upstream_insert(upstream, &addr, addrlen, net)) {
 		log_err("out of memory");
 		return 0;
 	}
@@ -115,93 +113,41 @@ upstream_str_cfg(struct ecs_whitelist* whitelist, const char* str)
 
 /** read client_subnet config */
 static int 
-read_upstream(struct ecs_whitelist* whitelist, struct config_file* cfg)
+read_upstream(struct ednssubnet_upstream* upstream, struct config_file* cfg)
 {
 	struct config_strlist* p;
 	for(p = cfg->client_subnet; p; p = p->next) {
 		log_assert(p->str);
-		if(!upstream_str_cfg(whitelist, p->str))
+		if(!upstream_str_cfg(upstream, p->str))
 			return 0;
-	}
-	return 1;
-}
-
-/** read client_subnet_zone config */
-static int 
-read_names(struct ecs_whitelist* whitelist, struct config_file* cfg)
-{
-	/* parse names, report errors, insert into tree */
-	struct config_strlist* p;
-	struct name_tree_node* n;
-	uint8_t* nm, *nmr;
-	size_t nm_len;
-	int nm_labs;
-
-	for(p = cfg->client_subnet_zone; p; p = p->next) {
-		log_assert(p->str);
-		nm = sldns_str2wire_dname(p->str, &nm_len);
-		if(!nm) {
-			log_err("cannot parse client-subnet-zone: %s", p->str);
-			return 0;
-		}
-		nm_labs = dname_count_size_labels(nm, &nm_len);
-		nmr = (uint8_t*)regional_alloc_init(whitelist->region, nm,
-			nm_len);
-		free(nm);
-		if(!nmr) {
-			log_err("out of memory");
-			return 0;
-		}
-		n = (struct name_tree_node*)regional_alloc(whitelist->region,
-			sizeof(*n));
-		if(!n) {
-			log_err("out of memory");
-			return 0;
-		}
-		if(!name_tree_insert(&whitelist->dname, n, nmr, nm_len, nm_labs,
-			LDNS_RR_CLASS_IN)) {
-			verbose(VERB_QUERY, "ignoring duplicate "
-				"client-subnet-zone: %s", p->str);
-		}
 	}
 	return 1;
 }
 
 int 
-ecs_whitelist_apply_cfg(struct ecs_whitelist* whitelist,
+upstream_apply_cfg(struct ednssubnet_upstream* upstream,
 	struct config_file* cfg)
 {
-	regional_free_all(whitelist->region);
-	addr_tree_init(&whitelist->upstream);
-	name_tree_init(&whitelist->dname);
-	if(!read_upstream(whitelist, cfg))
+	regional_free_all(upstream->region);
+	addr_tree_init(&upstream->tree);
+	if(!read_upstream(upstream, cfg))
 		return 0;
-	if(!read_names(whitelist, cfg))
-		return 0;
-	addr_tree_init_parents(&whitelist->upstream);
-	name_tree_init_parents(&whitelist->dname);
+	addr_tree_init_parents(&upstream->tree);
 	return 1;
 }
 
 int 
-ecs_is_whitelisted(struct ecs_whitelist* whitelist,
-	struct sockaddr_storage* addr, socklen_t addrlen, uint8_t* qname,
-	size_t qname_len, uint16_t qclass)
+upstream_is_whitelisted(struct ednssubnet_upstream* upstream,
+	struct sockaddr_storage* addr, socklen_t addrlen)
 {
-	int labs;
-	if(addr_tree_lookup(&whitelist->upstream, addr, addrlen))
-		return 1;
-	/* Not in upstream whitelist, check dname whitelist. */
-	labs = dname_count_labels(qname);
-	return name_tree_lookup(&whitelist->dname, qname, qname_len, labs,
-		qclass) != NULL;
+	return addr_tree_lookup(&upstream->tree, addr, addrlen) != NULL;
 }
 
 size_t 
-ecs_whitelist_get_mem(struct ecs_whitelist* whitelist)
+upstream_get_mem(struct ednssubnet_upstream* upstream)
 {
-	if(!whitelist) return 0;
-	return sizeof(*whitelist) + regional_get_mem(whitelist->region);
+	if(!upstream) return 0;
+	return sizeof(*upstream) + regional_get_mem(upstream->region);
 }
 
 #endif /* CLIENT_SUBNET */

@@ -345,7 +345,6 @@ if [ "$DOWIN" = "yes" ]; then
     file="unbound-$version.zip"
     rm -f $file
     info "Creating $file"
-    grep '^". IN DS' smallapp/unbound-anchor.c | sed -e 's/"//' -e 's/\\n.*$//' > root.key
     mkdir tmp.$$
     # keep debug symbols
     #$strip unbound.exe
@@ -357,21 +356,16 @@ if [ "$DOWIN" = "yes" ]; then
     #$strip unbound-service-install.exe
     #$strip unbound-service-remove.exe
     cd tmp.$$
-    cp ../root.key .
     cp ../doc/example.conf ../doc/Changelog .
     cp ../unbound.exe ../unbound-anchor.exe ../unbound-host.exe ../unbound-control.exe ../unbound-checkconf.exe ../unbound-service-install.exe ../unbound-service-remove.exe ../LICENSE ../winrc/unbound-control-setup.cmd ../winrc/unbound-website.url ../winrc/service.conf ../winrc/README.txt ../contrib/create_unbound_ad_servers.cmd ../contrib/warmup.cmd ../contrib/unbound_cache.cmd .
     # zipfile
-    zip ../$file LICENSE README.txt unbound.exe unbound-anchor.exe unbound-host.exe unbound-control.exe unbound-checkconf.exe unbound-service-install.exe unbound-service-remove.exe unbound-control-setup.cmd example.conf service.conf root.key unbound-website.url create_unbound_ad_servers.cmd warmup.cmd unbound_cache.cmd Changelog
+    zip ../$file LICENSE README.txt unbound.exe unbound-anchor.exe unbound-host.exe unbound-control.exe unbound-checkconf.exe unbound-service-install.exe unbound-service-remove.exe unbound-control-setup.cmd example.conf service.conf unbound-website.url create_unbound_ad_servers.cmd warmup.cmd unbound_cache.cmd Changelog
     info "Testing $file"
     (cd .. ; zip -T $file )
     # installer
     info "Creating installer"
     quadversion=`cat ../config.h | grep RSRC_PACKAGE_VERSION | sed -e 's/#define RSRC_PACKAGE_VERSION //' -e 's/,/\\./g'`
     cat ../winrc/setup.nsi | sed -e 's/define VERSION.*$/define VERSION "'$version'"/' -e 's/define QUADVERSION.*$/define QUADVERSION "'$quadversion'"/' > ../winrc/setup_ed.nsi
-    if test "$W64" = "yes"; then
-	mv ../winrc/setup_ed.nsi ../winrc/setup_ed_old.nsi
-	cat ../winrc/setup_ed_old.nsi | sed -e 's/PROGRAMFILES/PROGRAMFILES64/' > ../winrc/setup_ed.nsi
-    fi
     "$makensis" ../winrc/setup_ed.nsi
     info "Created installer"
     cd ..

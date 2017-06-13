@@ -54,7 +54,6 @@
 #include "util/net_help.h"
 #include "util/module.h"
 #include "util/regional.h"
-#include "util/config_file.h"
 #include "sldns/wire2str.h"
 #include "sldns/parseutil.h"
 
@@ -915,7 +914,7 @@ void val_reply_remove_auth(struct reply_info* rep, size_t index)
 }
 
 void
-val_check_nonsecure(struct module_env* env, struct reply_info* rep) 
+val_check_nonsecure(struct val_env* ve, struct reply_info* rep) 
 {
 	size_t i;
 	/* authority */
@@ -956,7 +955,7 @@ val_check_nonsecure(struct module_env* env, struct reply_info* rep)
 		}
 	}
 	/* additional */
-	if(!env->cfg->val_clean_additional)
+	if(!ve->clean_additional)
 		return;
 	for(i=rep->an_numrrsets+rep->ns_numrrsets; i<rep->rrset_count; i++) {
 		if(((struct packed_rrset_data*)rep->rrsets[i]->entry.data)

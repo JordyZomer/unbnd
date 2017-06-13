@@ -36,8 +36,8 @@
 /**
  * \file
  *
- * Keep track of the white listed servers and domain names for subnet option.
- * Based on acl_list.c|h
+ * Keep track of the white listed servers for subnet option. Based
+ * on acl_list.c|h
  */
 
 #ifndef EDNSSUBNET_WHITELIST_H
@@ -48,9 +48,9 @@ struct config_file;
 struct regional;
 
 /**
- * ecs_whitelist structure
+ * ednssubnet_upstream structure
  */
-struct ecs_whitelist {
+struct ednssubnet_upstream {
 	/** regional for allocation */
 	struct regional* region;
 	/** 
@@ -58,54 +58,45 @@ struct ecs_whitelist {
 	 * contents of type addr_tree_node. Each node is an address span 
 	 * Unbound will append subnet option for.
 	 */
-	rbtree_type upstream;
-	/**
-	 * Tree of domain names for which Unbound will append an ECS option.
-	 * rbtree of struct name_tree_node.
-	 */
-	rbtree_type dname;
+	rbtree_type tree;
 };
 
 /**
- * Create ecs_whitelist structure 
+ * Create ednssubnet_upstream structure 
  * @return new structure or NULL on error.
  */
-struct ecs_whitelist* ecs_whitelist_create(void);
+struct ednssubnet_upstream* upstream_create(void);
 
 /**
- * Delete ecs_whitelist structure.
- * @param whitelist: to delete.
+ * Delete ednssubnet_upstream structure.
+ * @param upstream: to delete.
  */
-void ecs_whitelist_delete(struct ecs_whitelist* whitelist);
+void upstream_delete(struct ednssubnet_upstream* upstream);
 
 /**
- * Process ecs_whitelist config.
- * @param whitelist: where to store.
+ * Process ednssubnet_upstream config.
+ * @param upstream: where to store.
  * @param cfg: config options.
  * @return 0 on error.
  */
-int ecs_whitelist_apply_cfg(struct ecs_whitelist* whitelist,
+int upstream_apply_cfg(struct ednssubnet_upstream* upstream,
 	struct config_file* cfg);
 
 /**
- * See if an address or domain is whitelisted.
- * @param whitelist: structure for address storage.
+ * See if an address is whitelisted.
+ * @param upstream: structure for address storage.
  * @param addr: address to check
  * @param addrlen: length of addr.
- * @param qname: dname in query
- * @param qname_len: length of dname
- * @param qclass: class in query
  * @return: true if the address is whitelisted for subnet option. 
  */
-int ecs_is_whitelisted(struct ecs_whitelist* whitelist,
-	struct sockaddr_storage* addr, socklen_t addrlen, uint8_t* qname,
-	size_t qname_len, uint16_t qclass);
+int upstream_is_whitelisted(struct ednssubnet_upstream* upstream,
+	struct sockaddr_storage* addr, socklen_t addrlen);
 
 /**
- * Get memory used by ecs_whitelist structure.
- * @param whitelist: structure for address storage.
+ * Get memory used by ednssubnet_upstream structure.
+ * @param upstream: structure for address storage.
  * @return bytes in use.
  */
-size_t ecs_whitelist_get_mem(struct ecs_whitelist* whitelist);
+size_t upstream_get_mem(struct ednssubnet_upstream* upstream);
 
 #endif /* EDNSSUBNET_WHITELIST_H */

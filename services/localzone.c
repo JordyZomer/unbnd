@@ -187,9 +187,7 @@ lz_enter_zone_dname(struct local_zones* zones, uint8_t* nm, size_t len,
 	lock_rw_wrlock(&z->lock);
 	if(!rbtree_insert(&zones->ztree, &z->node)) {
 		struct local_zone* oldz;
-		char str[256];
-		dname_str(nm, str);
-		log_warn("duplicate local-zone %s", str);
+		log_warn("duplicate local-zone");
 		lock_rw_unlock(&z->lock);
 		/* save zone name locally before deallocation,
 		 * otherwise, nm is gone if we zone_delete now. */
@@ -746,14 +744,11 @@ add_as112_default(struct local_zones* zones, struct config_file* cfg,
 }
 
 /** enter default zones */
-int local_zone_enter_defaults(struct local_zones* zones, struct config_file* cfg)
+static int
+lz_enter_defaults(struct local_zones* zones, struct config_file* cfg)
 {
 	struct local_zone* z;
 	const char** zstr;
-
-	/* Do not add any default */
-	if(cfg->local_zones_disable_default)
-		return 1;
 
 	/* this list of zones is from RFC 6303 and RFC 7686 */
 
@@ -1024,7 +1019,7 @@ local_zones_apply_cfg(struct local_zones* zones, struct config_file* cfg)
 		return 0;
 	}
 	/* apply default zones+content (unless disabled, or overridden) */
-	if(!local_zone_enter_defaults(zones, cfg)) {
+	if(!lz_enter_defaults(zones, cfg)) {
 		return 0;
 	}
 	/* enter local zone overrides */
@@ -1590,7 +1585,7 @@ local_zones_answer(struct local_zones* zones, struct module_env* env,
 			lock_rw_rdlock(&z->lock);
 			lzt = z->type;
 		}
-		if(view->local_zones && !z && !view->isfirst){
+		if(!z && !view->isfirst){
 			lock_rw_unlock(&view->lock);
 			return 0;
 		}
@@ -1675,8 +1670,6 @@ int local_zone_str2type(const char* type, enum localzone_type* t)
 		*t = local_zone_always_refuse;
 	else if(strcmp(type, "always_nxdomain") == 0)
 		*t = local_zone_always_nxdomain;
-	else if(strcmp(type, "nodefault") == 0)
-		*t = local_zone_nodefault;
 	else return 0;
 	return 1;
 }
