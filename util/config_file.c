@@ -290,10 +290,6 @@ config_create(void)
 	cfg->ipsecmod_whitelist = NULL;
 	cfg->ipsecmod_strict = 0;
 #endif
-#ifdef USE_CACHEDB
-	cfg->cachedb_backend = NULL;
-	cfg->cachedb_secret = NULL;
-#endif
 	return cfg;
 error_exit:
 	config_delete(cfg); 
@@ -962,10 +958,6 @@ config_get_option(struct config_file* cfg, const char* opt,
 	else O_LST(opt, "ipsecmod-whitelist", ipsecmod_whitelist)
 	else O_YNO(opt, "ipsecmod-strict", ipsecmod_strict)
 #endif
-#ifdef USE_CACHEDB
-	else O_STR(opt, "backend", cachedb_backend)
-	else O_STR(opt, "secret-seed", cachedb_secret)
-#endif
 	/* not here:
 	 * outgoing-permit, outgoing-avoid - have list of ports
 	 * local-zone - zones and nodefault variables
@@ -1266,10 +1258,6 @@ config_delete(struct config_file* cfg)
 #ifdef USE_IPSECMOD
 	free(cfg->ipsecmod_hook);
 	config_delstrlist(cfg->ipsecmod_whitelist);
-#endif
-#ifdef USE_CACHEDB
-	free(cfg->cachedb_backend);
-	free(cfg->cachedb_secret);
 #endif
 	free(cfg);
 }

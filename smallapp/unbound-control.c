@@ -337,8 +337,6 @@ static void print_extended(struct ub_stats_info* s)
 	if(!inhibit_zero || s->svr.ans_rcode_nodata) {
 		PR_UL("num.answer.rcode.nodata", s->svr.ans_rcode_nodata);
 	}
-	/* iteration */
-	PR_UL("num.query.ratelimited", s->svr.queries_ratelimited);
 	/* validation */
 	PR_UL("num.answer.secure", s->svr.ans_secure);
 	PR_UL("num.answer.bogus", s->svr.ans_bogus);
@@ -358,7 +356,7 @@ static void do_stats_shm(struct config_file* cfg, struct ub_stats_info* stats,
 	struct ub_shm_stat_info* shm_stat)
 {
 	int i;
-	char nm[32];
+	char nm[16];
 	for(i=0; i<cfg->num_threads; i++) {
 		snprintf(nm, sizeof(nm), "thread%d", i);
 		pr_stats(nm, &stats[i+1]);
@@ -765,9 +763,7 @@ int main(int argc, char* argv[])
 #ifdef HAVE_ERR_LOAD_CRYPTO_STRINGS
 	ERR_load_crypto_strings();
 #endif
-#if OPENSSL_VERSION_NUMBER < 0x10100000 || !defined(HAVE_OPENSSL_INIT_SSL)
 	ERR_load_SSL_strings();
-#endif
 #if OPENSSL_VERSION_NUMBER < 0x10100000 || !defined(HAVE_OPENSSL_INIT_CRYPTO)
 	OpenSSL_add_all_algorithms();
 #else
@@ -778,7 +774,7 @@ int main(int argc, char* argv[])
 #if OPENSSL_VERSION_NUMBER < 0x10100000 || !defined(HAVE_OPENSSL_INIT_SSL)
 	(void)SSL_library_init();
 #else
-	(void)OPENSSL_init_ssl(OPENSSL_INIT_LOAD_SSL_STRINGS, NULL);
+	(void)OPENSSL_init_ssl(0, NULL);
 #endif
 
 	if(!RAND_status()) {

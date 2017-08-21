@@ -56,7 +56,6 @@
 #include "util/timehist.h"
 #include "util/net_help.h"
 #include "validator/validator.h"
-#include "iterator/iterator.h"
 #include "sldns/sbuffer.h"
 #include "services/cache/rrset.h"
 #include "services/cache/infra.h"
@@ -124,7 +123,7 @@ void server_stats_log(struct ub_server_stats* stats, struct worker* worker,
 
 /** get rrsets bogus number from validator */
 static size_t
-get_rrset_bogus(struct worker* worker, int reset)
+get_rrset_bogus(struct worker* worker)
 {
 	int m = modstack_find(&worker->env.mesh->mods, "validator");
 	struct val_env* ve;
@@ -134,27 +133,9 @@ get_rrset_bogus(struct worker* worker, int reset)
 	ve = (struct val_env*)worker->env.modinfo[m];
 	lock_basic_lock(&ve->bogus_lock);
 	r = ve->num_rrset_bogus;
-	if(reset && !worker->env.cfg->stat_cumulative)
+	if(!worker->env.cfg->stat_cumulative)
 		ve->num_rrset_bogus = 0;
 	lock_basic_unlock(&ve->bogus_lock);
-	return r;
-}
-
-/** get number of ratelimited queries from iterator */
-static size_t
-get_queries_ratelimit(struct worker* worker, int reset)
-{
-	int m = modstack_find(&worker->env.mesh->mods, "iterator");
-	struct iter_env* ie;
-	size_t r;
-	if(m == -1)
-		return 0;
-	ie = (struct iter_env*)worker->env.modinfo[m];
-	lock_basic_lock(&ie->queries_ratelimit_lock);
-	r = ie->num_queries_ratelimited;
-	if(reset && !worker->env.cfg->stat_cumulative)
-		ie->num_queries_ratelimited = 0;
-	lock_basic_unlock(&ie->queries_ratelimit_lock);
 	return r;
 }
 
@@ -188,10 +169,7 @@ server_stats_compile(struct worker* worker, struct ub_stats_info* s, int reset)
 	s->svr.qtcp_outgoing = (long long)worker->back->num_tcp_outgoing;
 
 	/* get and reset validator rrset bogus number */
-	s->svr.rrset_bogus = (long long)get_rrset_bogus(worker, reset);
-
-	/* get and reset iterator query ratelimit number */
-	s->svr.queries_ratelimited = (long long)get_queries_ratelimit(worker, reset);
+	s->svr.rrset_bogus = (long long)get_rrset_bogus(worker);
 
 	/* get cache sizes */
 	s->svr.msg_cache_count = (long long)count_slabhash_entries(worker->env.msg_cache);
@@ -288,6 +266,7 @@ void server_stats_add(struct ub_stats_info* total, struct ub_stats_info* a)
 		total->svr.zero_ttl_responses += a->svr.zero_ttl_responses;
 		total->svr.ans_secure += a->svr.ans_secure;
 		total->svr.ans_bogus += a->svr.ans_bogus;
+		total->svr.rrset_bogus += a->svr.rrset_bogus;
 		total->svr.unwanted_replies += a->svr.unwanted_replies;
 		total->svr.unwanted_queries += a->svr.unwanted_queries;
 		total->svr.tcp_accept_usage += a->svr.tcp_accept_usage;

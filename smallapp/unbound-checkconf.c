@@ -427,11 +427,8 @@ morechecks(struct config_file* cfg, const char* fname)
 	check_chroot_string("dlv-anchor-file", &cfg->dlv_anchor_file,
 		cfg->chrootdir, cfg);
 #ifdef USE_IPSECMOD
-	if(cfg->ipsecmod_enabled && strstr(cfg->module_conf, "ipsecmod")) {
-		/* only check hook if enabled */
-		check_chroot_string("ipsecmod-hook", &cfg->ipsecmod_hook,
-			cfg->chrootdir, cfg);
-	}
+	check_chroot_string("ipsecmod-hook", &cfg->ipsecmod_hook, cfg->chrootdir,
+		cfg);
 #endif
 	/* remove chroot setting so that modules are not stripping pathnames*/
 	free(cfg->chrootdir);

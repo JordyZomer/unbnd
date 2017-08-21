@@ -229,10 +229,42 @@ daemon_remote_create(struct config_file* cfg)
 		free(rc);
 		return NULL;
 	}
-	if(!listen_sslctx_setup(rc->ctx)) {
+	/* no SSLv2, SSLv3 because has defects */
+	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_SSLv2) & SSL_OP_NO_SSLv2)
+		!= SSL_OP_NO_SSLv2){
+		log_crypto_err("could not set SSL_OP_NO_SSLv2");
 		daemon_remote_delete(rc);
 		return NULL;
 	}
+	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_SSLv3) & SSL_OP_NO_SSLv3)
+		!= SSL_OP_NO_SSLv3){
+		log_crypto_err("could not set SSL_OP_NO_SSLv3");
+		daemon_remote_delete(rc);
+		return NULL;
+	}
+#if defined(SSL_OP_NO_TLSv1) && defined(SSL_OP_NO_TLSv1_1)
+	/* if we have tls 1.1 disable 1.0 */
+	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_TLSv1) & SSL_OP_NO_TLSv1)
+		!= SSL_OP_NO_TLSv1){
+		log_crypto_err("could not set SSL_OP_NO_TLSv1");
+		daemon_remote_delete(rc);
+		return NULL;
+	}
+#endif
+#if defined(SSL_OP_NO_TLSv1_1) && defined(SSL_OP_NO_TLSv1_2)
+	/* if we have tls 1.2 disable 1.1 */
+	if((SSL_CTX_set_options(rc->ctx, SSL_OP_NO_TLSv1_1) & SSL_OP_NO_TLSv1_1)
+		!= SSL_OP_NO_TLSv1_1){
+		log_crypto_err("could not set SSL_OP_NO_TLSv1_1");
+		daemon_remote_delete(rc);
+		return NULL;
+	}
+#endif
+#if defined(SHA256_DIGEST_LENGTH) && defined(USE_ECDSA)
+	/* if we have sha256, set the cipher list to have no known vulns */
+	if(!SSL_CTX_set_cipher_list(rc->ctx, "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256"))
+		log_crypto_err("could not set cipher list with SSL_CTX_set_cipher_list");
+#endif
 
 	if (cfg->remote_control_use_cert == 0) {
 		/* No certificates are requested */
@@ -282,7 +314,23 @@ daemon_remote_create(struct config_file* cfg)
 		log_crypto_err("Error in SSL_CTX check_private_key");
 		goto setup_error;
 	}
-	listen_sslctx_setup_2(rc->ctx);
+#if HAVE_DECL_SSL_CTX_SET_ECDH_AUTO
+	if(!SSL_CTX_set_ecdh_auto(rc->ctx,1)) {
+		log_crypto_err("Error in SSL_CTX_ecdh_auto, not enabling ECDHE");
+	}
+#elif defined(USE_ECDSA)
+	if(1) {
+		EC_KEY *ecdh = EC_KEY_new_by_curve_name (NID_X9_62_prime256v1);
+		if (!ecdh) {
+			log_crypto_err("could not find p256, not enabling ECDHE");
+		} else {
+			if (1 != SSL_CTX_set_tmp_ecdh (rc->ctx, ecdh)) {
+				log_crypto_err("Error in SSL_CTX_set_tmp_ecdh, not enabling ECDHE");
+			}
+			EC_KEY_free (ecdh);
+		}
+	}
+#endif
 	if(!SSL_CTX_load_verify_locations(rc->ctx, s_cert, NULL)) {
 		log_crypto_err("Error setting up SSL_CTX verify locations");
 	setup_error:
@@ -367,7 +415,7 @@ add_open(const char* ip, int nr, struct listen_port** list, int noproto_is_err,
 			if (cfg->username && cfg->username[0] &&
 				cfg_uid != (uid_t)-1) {
 				if(chown(ip, cfg_uid, cfg_gid) == -1)
-					verbose(VERB_QUERY, "cannot chown %u.%u %s: %s",
+					log_err("cannot chown %u.%u %s: %s",
 					  (unsigned)cfg_uid, (unsigned)cfg_gid,
 					  ip, strerror(errno));
 			}
@@ -793,7 +841,7 @@ print_stats(SSL* ssl, const char* nm, struct ub_stats_info* s)
 static int
 print_thread_stats(SSL* ssl, int i, struct ub_stats_info* s)
 {
-	char nm[32];
+	char nm[16];
 	snprintf(nm, sizeof(nm), "thread%d", i);
 	nm[sizeof(nm)-1]=0;
 	return print_stats(ssl, nm, s);
@@ -1017,9 +1065,6 @@ print_ext(SSL* ssl, struct ub_stats_info* s)
 		if(!ssl_printf(ssl, "num.answer.rcode.nodata"SQ"%lu\n", 
 			(unsigned long)s->svr.ans_rcode_nodata)) return 0;
 	}
-	/* iteration */
-	if(!ssl_printf(ssl, "num.query.ratelimited"SQ"%lu\n", 
-		(unsigned long)s->svr.queries_ratelimited)) return 0;
 	/* validation */
 	if(!ssl_printf(ssl, "num.answer.secure"SQ"%lu\n", 
 		(unsigned long)s->svr.ans_secure)) return 0;
@@ -2344,16 +2389,10 @@ dump_infra_host(struct lruhash_entry* e, void* arg)
 	struct infra_data* d = (struct infra_data*)e->data;
 	char ip_str[1024];
 	char name[257];
-	int port;
 	if(a->ssl_failed)
 		return;
 	addr_to_str(&k->addr, k->addrlen, ip_str, sizeof(ip_str));
 	dname_str(k->zonename, name);
-	port = (int)ntohs(((struct sockaddr_in*)&k->addr)->sin_port);
-	if(port != UNBOUND_DNS_PORT) {
-		snprintf(ip_str+strlen(ip_str), sizeof(ip_str)-strlen(ip_str),
-			"@%d", port);
-	}
 	/* skip expired stuff (only backed off) */
 	if(d->ttl < a->now) {
 		if(d->rtt.rto >= USEFUL_SERVER_TOP_TIMEOUT) {

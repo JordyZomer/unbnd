@@ -130,10 +130,8 @@ struct iter_env {
 	 */
 	int* target_fetch_policy;
 
-	/** lock on ratelimit counter */
-	lock_basic_type queries_ratelimit_lock;
-	/** number of queries that have been ratelimited */
-	size_t num_queries_ratelimited;
+	/** ip6.arpa dname in wireformat, used for qname-minimisation */
+	uint8_t* ip6arpa_dname;
 };
 
 /**

@@ -257,10 +257,7 @@ extern int yydebug;
     VAR_IPSECMOD_IGNORE_BOGUS = 467,
     VAR_IPSECMOD_MAX_TTL = 468,
     VAR_IPSECMOD_WHITELIST = 469,
-    VAR_IPSECMOD_STRICT = 470,
-    VAR_CACHEDB = 471,
-    VAR_CACHEDB_BACKEND = 472,
-    VAR_CACHEDB_SECRETSEED = 473
+    VAR_IPSECMOD_STRICT = 470
   };
 #endif
 /* Tokens.  */
@@ -477,9 +474,6 @@ extern int yydebug;
 #define VAR_IPSECMOD_MAX_TTL 468
 #define VAR_IPSECMOD_WHITELIST 469
 #define VAR_IPSECMOD_STRICT 470
-#define VAR_CACHEDB 471
-#define VAR_CACHEDB_BACKEND 472
-#define VAR_CACHEDB_SECRETSEED 473
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -490,7 +484,7 @@ union YYSTYPE
 
 	char*	str;
 
-#line 494 "util/configparser.h" /* yacc.c:1909  */
+#line 488 "util/configparser.h" /* yacc.c:1909  */
 };
 
 typedef union YYSTYPE YYSTYPE;

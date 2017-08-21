@@ -792,12 +792,7 @@ create_tcp_accept_sock(struct addrinfo *addr, int v6only, int* noproto,
 #endif
 	if ((setsockopt(s, IPPROTO_TCP, TCP_FASTOPEN, &qlen, 
 		  sizeof(qlen))) == -1 ) {
-#ifdef ENOPROTOOPT
-		/* squelch ENOPROTOOPT: freebsd server mode with kernel support
-		   disabled, except when verbosity enabled for debugging */
-		if(errno != ENOPROTOOPT || verbosity >= 3)
-#endif
-		  log_err("Setting TCP Fast Open as server failed: %s", strerror(errno));
+		log_err("Setting TCP Fast Open as server failed: %s", strerror(errno));
 	}
 #endif
 	return s;

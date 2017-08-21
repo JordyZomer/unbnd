@@ -16464,9 +16464,7 @@ if test x"$ax_pthread_ok" = xyes; then
 
 $as_echo "#define HAVE_PTHREAD 1" >>confdefs.h
 
-		if test -n "$PTHREAD_LIBS"; then
-		  LIBS="$PTHREAD_LIBS $LIBS"
-		fi
+		LIBS="$PTHREAD_LIBS $LIBS"
 		CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
 		CC="$PTHREAD_CC"
 		ub_have_pthreads=yes
@@ -16896,16 +16894,8 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 $as_echo "#define HAVE_PYTHON 1" >>confdefs.h
 
-      if test -n "$LIBS"; then
-        LIBS="$PYTHON_LDFLAGS $LIBS"
-      else
-        LIBS="$PYTHON_LDFLAGS"
-      fi
-      if test -n "$CPPFLAGS"; then
-        CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
-      else
-        CPPFLAGS="$PYTHON_CPPFLAGS"
-      fi
+      LIBS="$PYTHON_LDFLAGS $LIBS"
+      CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
       ub_have_python=yes
       PC_PY_DEPENDENCY="python"
 
@@ -18063,7 +18053,6 @@ case "$enable_dsa" in
       ;;
     *)
       # detect if DSA is supported, and turn it off if not.
-      if test $USE_NSS = "no" -a $USE_NETTLE = "no"; then
       ac_fn_c_check_func "$LINENO" "DSA_SIG_new" "ac_cv_func_DSA_SIG_new"
 if test "x$ac_cv_func_DSA_SIG_new" = xyes; then :
 
@@ -18078,13 +18067,6 @@ else
                fi
 fi
 
-      else
-
-cat >>confdefs.h <<_ACEOF
-#define USE_DSA 1
-_ACEOF
-
-      fi
       ;;
 esac
 
@@ -18114,34 +18096,17 @@ cat >>confdefs.h <<_ACEOF
 _ACEOF
 if test $ac_have_decl = 1; then :
 
+
+cat >>confdefs.h <<_ACEOF
+#define USE_ED25519 1
+_ACEOF
+
       		use_ed25519="yes"
 
 else
    if test "x$enable_ed25519" = "xyes"; then as_fn_error $? "OpenSSL does not support ED25519 and you used --enable-ed25519." "$LINENO" 5
 	      	fi
 fi
-
-      fi
-      if test $USE_NETTLE = "yes"; then
-		for ac_header in nettle/eddsa.h
-do :
-  ac_fn_c_check_header_compile "$LINENO" "nettle/eddsa.h" "ac_cv_header_nettle_eddsa_h" "$ac_includes_default
-"
-if test "x$ac_cv_header_nettle_eddsa_h" = xyes; then :
-  cat >>confdefs.h <<_ACEOF
-#define HAVE_NETTLE_EDDSA_H 1
-_ACEOF
- use_ed25519="yes"
-fi
-
-done
-
-      fi
-      if test $use_ed25519 = "yes"; then
-
-cat >>confdefs.h <<_ACEOF
-#define USE_ED25519 1
-_ACEOF
 
       fi
       ;;
@@ -20668,12 +20633,7 @@ $as_echo "#define OMITTED__D_LARGEFILE_SOURCE_1 1" >>confdefs.h
   fi
 
 
-if test -n "$LATE_LDFLAGS"; then
-  LDFLAGS="$LATE_LDFLAGS $LDFLAGS"
-fi
-# remove start spaces
-LDFLAGS=`echo "$LDFLAGS"|sed -e 's/^ *//'`
-LIBS=`echo "$LIBS"|sed -e 's/^ *//'`
+LDFLAGS="$LATE_LDFLAGS $LDFLAGS"
 
 
 cat >>confdefs.h <<_ACEOF
