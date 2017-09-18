@@ -108,7 +108,7 @@ query_info
    
    .. attribute:: qname_len
    
-      Length of question name (number of bytes).
+      Lenght of question name (number of bytes).
 	
    .. attribute:: qname_list[]
    

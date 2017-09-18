@@ -1277,7 +1277,7 @@ struct delegpt* find_delegation(struct module_qstate* qstate, char *nm, size_t n
    Functions
  * ************************************************************************************ */
 /******************************
- * Various debugging functions *
+ * Various debuging functions *
  ******************************/
 void verbose(enum verbosity_value level, const char* format, ...);
 void log_info(const char* format, ...);

@@ -669,7 +669,7 @@ wipe_ip_usage(struct ip_list* p)
 	}
 }
 
-/** count unused IPs */
+/** cound unused IPs */
 static int
 count_unused(struct ip_list* p)
 {
