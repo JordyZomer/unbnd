@@ -144,7 +144,6 @@ extern struct config_parser_state* cfg_parser;
 %token VAR_USE_SYSTEMD VAR_SHM_ENABLE VAR_SHM_KEY
 %token VAR_DNSCRYPT VAR_DNSCRYPT_ENABLE VAR_DNSCRYPT_PORT VAR_DNSCRYPT_PROVIDER
 %token VAR_DNSCRYPT_SECRET_KEY VAR_DNSCRYPT_PROVIDER_CERT
-%token VAR_DNSCRYPT_PROVIDER_CERT_ROTATED
 %token VAR_DNSCRYPT_SHARED_SECRET_CACHE_SIZE
 %token VAR_DNSCRYPT_SHARED_SECRET_CACHE_SLABS
 %token VAR_DNSCRYPT_NONCE_CACHE_SIZE
@@ -152,16 +151,16 @@ extern struct config_parser_state* cfg_parser;
 %token VAR_IPSECMOD_ENABLED VAR_IPSECMOD_HOOK VAR_IPSECMOD_IGNORE_BOGUS
 %token VAR_IPSECMOD_MAX_TTL VAR_IPSECMOD_WHITELIST VAR_IPSECMOD_STRICT
 %token VAR_CACHEDB VAR_CACHEDB_BACKEND VAR_CACHEDB_SECRETSEED
-%token VAR_UDP_UPSTREAM_WITHOUT_DOWNSTREAM VAR_FOR_UPSTREAM
-%token VAR_AUTH_ZONE VAR_ZONEFILE VAR_MASTER VAR_URL VAR_FOR_DOWNSTREAM
+%token VAR_UDP_UPSTREAM_WITHOUT_DOWNSTREAM
 
 %%
 toplevelvars: /* empty */ | toplevelvars toplevelvar ;
 toplevelvar: serverstart contents_server | stubstart contents_stub |
 	forwardstart contents_forward | pythonstart contents_py | 
-	rcstart contents_rc | dtstart contents_dt | viewstart contents_view |
-	dnscstart contents_dnsc | cachedbstart contents_cachedb |
-	authstart contents_auth
+	rcstart contents_rc | dtstart contents_dt | viewstart 
+	contents_view |
+	dnscstart contents_dnsc |
+	cachedbstart contents_cachedb
 	;
 
 /* server: declaration */
@@ -296,26 +295,6 @@ contents_view: contents_view content_view
 	| ;
 content_view: view_name | view_local_zone | view_local_data | view_first |
 		view_response_ip | view_response_ip_data | view_local_data_ptr
-	;
-authstart: VAR_AUTH_ZONE
-	{
-		struct config_auth* s;
-		OUTYY(("\nP(auth_zone:)\n")); 
-		s = (struct config_auth*)calloc(1, sizeof(struct config_auth));
-		if(s) {
-			s->next = cfg_parser->cfg->auths;
-			cfg_parser->cfg->auths = s;
-			/* defaults for auth zone */
-			s->for_downstream = 1;
-			s->for_upstream = 1;
-		} else 
-			yyerror("out of memory");
-	}
-	;
-contents_auth: contents_auth content_auth 
-	| ;
-content_auth: auth_name | auth_zonefile | auth_master | auth_url |
-	auth_for_downstream | auth_for_upstream
 	;
 server_num_threads: VAR_NUM_THREADS STRING_ARG 
 	{ 
@@ -2019,57 +1998,6 @@ forward_ssl_upstream: VAR_FORWARD_SSL_UPSTREAM STRING_ARG
 		free($2);
 	}
 	;
-auth_name: VAR_NAME STRING_ARG
-	{
-		OUTYY(("P(name:%s)\n", $2));
-		if(cfg_parser->cfg->auths->name)
-			yyerror("auth name override, there must be one name "
-				"for one auth-zone");
-		free(cfg_parser->cfg->auths->name);
-		cfg_parser->cfg->auths->name = $2;
-	}
-	;
-auth_zonefile: VAR_ZONEFILE STRING_ARG
-	{
-		OUTYY(("P(zonefile:%s)\n", $2));
-		free(cfg_parser->cfg->auths->zonefile);
-		cfg_parser->cfg->auths->zonefile = $2;
-	}
-	;
-auth_master: VAR_MASTER STRING_ARG
-	{
-		OUTYY(("P(master:%s)\n", $2));
-		if(!cfg_strlist_insert(&cfg_parser->cfg->auths->masters, $2))
-			yyerror("out of memory");
-	}
-	;
-auth_url: VAR_URL STRING_ARG
-	{
-		OUTYY(("P(url:%s)\n", $2));
-		if(!cfg_strlist_insert(&cfg_parser->cfg->auths->urls, $2))
-			yyerror("out of memory");
-	}
-	;
-auth_for_downstream: VAR_FOR_DOWNSTREAM STRING_ARG
-	{
-		OUTYY(("P(for-downstream:%s)\n", $2));
-		if(strcmp($2, "yes") != 0 && strcmp($2, "no") != 0)
-			yyerror("expected yes or no.");
-		else cfg_parser->cfg->auths->for_downstream =
-			(strcmp($2, "yes")==0);
-		free($2);
-	}
-	;
-auth_for_upstream: VAR_FOR_UPSTREAM STRING_ARG
-	{
-		OUTYY(("P(for-upstream:%s)\n", $2));
-		if(strcmp($2, "yes") != 0 && strcmp($2, "no") != 0)
-			yyerror("expected yes or no.");
-		else cfg_parser->cfg->auths->for_upstream =
-			(strcmp($2, "yes")==0);
-		free($2);
-	}
-	;
 view_name: VAR_NAME STRING_ARG
 	{
 		OUTYY(("P(name:%s)\n", $2));
@@ -2411,7 +2339,6 @@ contents_dnsc: contents_dnsc content_dnsc
 content_dnsc:
 	dnsc_dnscrypt_enable | dnsc_dnscrypt_port | dnsc_dnscrypt_provider |
 	dnsc_dnscrypt_secret_key | dnsc_dnscrypt_provider_cert |
-	dnsc_dnscrypt_provider_cert_rotated |
 	dnsc_dnscrypt_shared_secret_cache_size |
 	dnsc_dnscrypt_shared_secret_cache_slabs |
 	dnsc_dnscrypt_nonce_cache_size |
@@ -2447,24 +2374,13 @@ dnsc_dnscrypt_provider: VAR_DNSCRYPT_PROVIDER STRING_ARG
 dnsc_dnscrypt_provider_cert: VAR_DNSCRYPT_PROVIDER_CERT STRING_ARG
 	{
 		OUTYY(("P(dnsc_dnscrypt_provider_cert:%s)\n", $2));
-		if(cfg_strlist_find(cfg_parser->cfg->dnscrypt_provider_cert, $2))
-			log_warn("dnscrypt-provider-cert %s is a duplicate", $2);
 		if(!cfg_strlist_insert(&cfg_parser->cfg->dnscrypt_provider_cert, $2))
 			fatal_exit("out of memory adding dnscrypt-provider-cert");
-	}
-	;
-dnsc_dnscrypt_provider_cert_rotated: VAR_DNSCRYPT_PROVIDER_CERT_ROTATED STRING_ARG
-	{
-		OUTYY(("P(dnsc_dnscrypt_provider_cert_rotated:%s)\n", $2));
-		if(!cfg_strlist_insert(&cfg_parser->cfg->dnscrypt_provider_cert_rotated, $2))
-			fatal_exit("out of memory adding dnscrypt-provider-cert-rotated");
 	}
 	;
 dnsc_dnscrypt_secret_key: VAR_DNSCRYPT_SECRET_KEY STRING_ARG
 	{
 		OUTYY(("P(dnsc_dnscrypt_secret_key:%s)\n", $2));
-		if(cfg_strlist_find(cfg_parser->cfg->dnscrypt_secret_key, $2))
-			log_warn("dnscrypt-secret-key: %s is a duplicate", $2);
 		if(!cfg_strlist_insert(&cfg_parser->cfg->dnscrypt_secret_key, $2))
 			fatal_exit("out of memory adding dnscrypt-secret-key");
 	}

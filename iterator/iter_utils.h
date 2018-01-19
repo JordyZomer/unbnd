@@ -193,7 +193,7 @@ int iter_indicates_dnssec_fwd(struct module_env* env,
  * @param dp: delegation point.
  * @param msg: delegation message, with DS if a secure referral.
  * @param dclass: class of query.
- * @return 1 if dnssec is expected, 0 if not or insecure point above qname.
+ * @return 1 if dnssec is expected, 0 if not.
  */
 int iter_indicates_dnssec(struct module_env* env, struct delegpt* dp,
 	struct dns_msg* msg, uint16_t dclass);

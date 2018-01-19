@@ -42,7 +42,6 @@
 #ifndef UTIL_CONFIG_FILE_H
 #define UTIL_CONFIG_FILE_H
 struct config_stub;
-struct config_auth;
 struct config_view;
 struct config_strlist;
 struct config_str2list;
@@ -171,8 +170,6 @@ struct config_file {
 	struct config_stub* stubs;
 	/** the forward zone definitions, linked list */
 	struct config_stub* forwards;
-	/** the auth zone definitions, linked list */
-	struct config_auth* auths;
 	/** the views definitions, linked list */
 	struct config_view* views;
 	/** list of donotquery addresses, linked list */
@@ -469,10 +466,6 @@ struct config_file {
 	struct config_strlist* dnscrypt_secret_key;
 	/** dnscrypt provider certs 1.cert */
 	struct config_strlist* dnscrypt_provider_cert;
-	/** dnscrypt provider certs 1.cert which have been rotated and should not be
-	* advertised through DNS's providername TXT record but are required to be
-	* able to handle existing traffic using the old cert. */
-	struct config_strlist* dnscrypt_provider_cert_rotated;
 	/** memory size in bytes for dnscrypt shared secrets cache */
 	size_t dnscrypt_shared_secret_cache_size;
 	/** number of slabs for dnscrypt shared secrets cache */
@@ -531,26 +524,6 @@ struct config_stub {
 	int isfirst;
 	/** use SSL for queries to this stub */
 	int ssl_upstream;
-};
-
-/**
- * Auth config options
- */
-struct config_auth {
-	/** next in list */
-	struct config_auth* next;
-	/** domain name (in text) of the auth apex domain */
-	char* name;
-	/** list of masters */
-	struct config_strlist* masters;
-	/** list of urls */
-	struct config_strlist* urls;
-	/** zonefile (or NULL) */
-	char* zonefile;
-	/** provide downstream answers */
-	int for_downstream;
-	/** provide upstream answers */
-	int for_upstream;
 };
 
 /**
@@ -748,15 +721,6 @@ char* config_collate_cat(struct config_strlist* list);
 int cfg_strlist_append(struct config_strlist_head* list, char* item);
 
 /**
- * Find string in strlist.
- * @param head: pointer to strlist head variable.
- * @param item: the item to search for.
- * @return: the element in the list when found, NULL otherwise.
- */
-struct config_strlist* cfg_strlist_find(struct config_strlist* head,
-	const char* item);
-
-/**
  * Insert string into strlist.
  * @param head: pointer to strlist head variable.
  * @param item: new item. malloced by caller. If NULL the insertion fails.
@@ -842,18 +806,6 @@ void config_delstub(struct config_stub* p);
  * @param list: list.
  */
 void config_delstubs(struct config_stub* list);
-
-/**
- * Delete an auth item
- * @param p: auth item
- */
-void config_delauth(struct config_auth* p);
-
-/**
- * Delete items in config auth list.
- * @param list: list.
- */
-void config_delauths(struct config_auth* list);
 
 /**
  * Delete a view item
